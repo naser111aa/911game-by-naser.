@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Custom Flappy Bird</title>
+    <style>
+        body { margin: 0; overflow: hidden; text-align: center; background-color: lightblue; }
+        canvas { display: block; position: absolute; top: 0; left: 0; }
+        #score { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); font-size: 24px; font-weight: bold; color: white; }
+        #replay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 20px; padding: 10px 20px; display: none; }
+    </style>
+</head>
+<body>
+    <div id="score">Score: 0</div>
+    <button id="replay" onclick="restartGame()">Replay</button>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const birdImg = new Image();
+        birdImg.src = "oss-removebg-preview.png";
+        
+        const towerImg = new Image();
+        towerImg.src = "tt-removebg-preview.png";
+        
+        const gameOverSound = new Audio("Allah-Akbar-Sound-Effect.mp3");
+        const backgroundMusic = new Audio("gOeh1ajYebsc.128.mp3"); // Add background music
+        backgroundMusic.loop = true;
+        backgroundMusic.play();
+        
+        let bird = { x: 50, y: canvas.height / 2, width: 40, height: 30, gravity: 0.5, lift: -10, velocity: 0 };
+        let pipes = [];
+        let frame = 0;
+        let score = 0;
+        let gameOver = false;
+
+        function drawBird() {
+            ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
+        }
+
+        function drawPipes() {
+            for (let pipe of pipes) {
+                ctx.drawImage(towerImg, pipe.x, pipe.y, pipe.width, pipe.height);
+            }
+        }
+
+        function update() {
+            if (gameOver) return;
+            
+            bird.velocity += bird.gravity;
+            bird.y += bird.velocity;
+            
+            if (frame % 100 === 0) {
+                let gap = 150;
+                let topHeight = Math.random() * (canvas.height / 2);
+                pipes.push({ x: canvas.width, y: 0, width: 50, height: topHeight });
+                pipes.push({ x: canvas.width, y: topHeight + gap, width: 50, height: canvas.height });
+                score++;
+                document.getElementById("score").innerText = "Score: " + score;
+            }
+            
+            for (let pipe of pipes) {
+                pipe.x -= 3;
+                
+                if (bird.x < pipe.x + pipe.width && bird.x + bird.width > pipe.x &&
+                    bird.y < pipe.y + pipe.height && bird.y + bird.height > pipe.y) {
+                    endGame();
+                }
+            }
+            
+            if (bird.y + bird.height > canvas.height || bird.y < 0) {
+                endGame();
+            }
+            frame++;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBird();
+            drawPipes();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            if (!gameOver) requestAnimationFrame(gameLoop);
+        }
+
+        function endGame() {
+            gameOver = true;
+            gameOverSound.play();
+            backgroundMusic.pause(); // Stop background music when the game ends
+            document.getElementById("replay").style.display = "block";
+            alert("this game made by the iconic goat mr nasereddin benamor")
+        }
+
+        function restartGame() {
+    bird.y = canvas.height / 2;
+    bird.velocity = 0;
+    pipes = [];
+    frame = 0;
+    score = 0;
+    document.getElementById("score").innerText = "Score: 0";
+    gameOver = false;
+    document.getElementById("replay").style.display = "none";
+    backgroundMusic.currentTime = 0; // Restart the background music
+    backgroundMusic.play();
+    
+    // Restart the game loop
+    requestAnimationFrame(gameLoop);
+}
+
+        document.addEventListener("keydown", () => bird.velocity = bird.lift);
+        birdImg.onload = gameLoop;
+    </script>
+</body>
+</html>
